@@ -14,7 +14,13 @@ public class MyFirstTask implements ServerTask<String> {
     private TaskContext taskContext;
 
     public String call() throws Exception {
-        return "Hello¿¿¿¿¿";
+        taskContext
+                .getCache()
+                .ifPresent(cache ->
+                        cache.forEach((o, o2) ->
+                                System.out.println(o + ":" + o2)));
+
+        return "Hello";
     }
 
     public void setTaskContext(TaskContext taskContext) {
