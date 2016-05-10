@@ -1,26 +1,34 @@
 package org.daven.infinispan;
 
+import org.infinispan.Cache;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.tasks.ServerTask;
 import org.infinispan.tasks.TaskContext;
 import org.infinispan.tasks.TaskExecutionMode;
 
-import java.util.HashMap;
-import java.util.Optional;
-import java.util.Set;
 
-
+@SuppressWarnings("unchecked")
 public class MyFirstTask implements ServerTask<String> {
 
     private TaskContext taskContext;
 
     public String call() throws Exception {
-        taskContext
-                .getCache()
-                .ifPresent(cache ->
-                        cache.forEach((o, o2) ->
-                                System.out.println(o + ":" + o2)));
 
-        return "Hello";
+        final Marshaller marshaller = taskContext.getMarshaller().get();
+
+        getCacheByName("CUSTOMER")
+          .entrySet()
+          .stream()
+          .forEach(entry -> {
+              System.out.println(entry.getKey());
+              System.out.println(entry.getValue());
+          });
+
+        return "Success";
+    }
+
+    private Cache<String, String> getCacheByName(String cacheName) {
+        return taskContext.getCache().get().getCacheManager().getCache(cacheName, true);
     }
 
     public void setTaskContext(TaskContext taskContext) {
@@ -32,17 +40,6 @@ public class MyFirstTask implements ServerTask<String> {
     }
 
     public TaskExecutionMode getExecutionMode() {
-        return TaskExecutionMode.ALL_NODES;
-    }
-
-    public Optional<String> getAllowedRole() {
-        return Optional.empty();
-    }
-
-    public Set<String> getParameters() {
-        return taskContext
-                .getParameters()
-                .orElse(new HashMap<>())
-                .keySet();
+        return TaskExecutionMode.ONE_NODE;
     }
 }

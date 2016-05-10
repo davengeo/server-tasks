@@ -23,12 +23,12 @@ public class DeployableUnit {
         javaArchive = ShrinkWrap
                 .create(JavaArchive.class)
                 .addClasses(serviceClasses)
-                .addAsServiceProvider(ServerTask.class, serviceClasses);
+                .addAsServiceProvider(ServerTask.class, serviceClasses[0]);
         return this;
     }
 
-    public void deploy(String fileName) {
-        File f = new File(".", fileName);
+    public void deploy(String fileName, String deployPath) {
+        File f = new File(deployPath, fileName);
         javaArchive.as(ZipExporter.class).exportTo(f, true);
     }
 

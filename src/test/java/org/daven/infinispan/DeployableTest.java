@@ -7,10 +7,13 @@ public class DeployableTest {
 
     DeployableUnit deployableUnit = DeployableUnit.getOne();
 
+    String deploymentPath = "C:\\Data\\tools\\jboss\\jboss-datagrid-7.0.0-server\\standalone\\deployments";
+
     @Test
-    public void should_create_greeting() {
+    public void should_create_deployable() {
         deployableUnit
-                .createJar(MyFirstTask.class)
-                .deploy("map-reduce.jar");
+          .createJar(MyFirstTask.class, TechnicalException.class)
+          .deploy("map-reduce.jar", deploymentPath);
     }
+
 }
