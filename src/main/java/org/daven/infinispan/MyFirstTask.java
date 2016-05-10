@@ -1,5 +1,6 @@
 package org.daven.infinispan;
 
+import lombok.extern.slf4j.Slf4j;
 import org.infinispan.Cache;
 import org.infinispan.stream.CacheCollectors;
 import org.infinispan.tasks.ServerTask;
@@ -11,15 +12,20 @@ import java.util.stream.Collectors;
 //at least in JDG7.0.0 beta the cache should have
 // the compability flag.
 @SuppressWarnings("unchecked")
+@Slf4j
 public class MyFirstTask implements ServerTask<String> {
 
     private TaskContext taskContext;
 
     public String call() throws Exception {
 
-        final Long customer = getCacheByName("CUSTOMER")
+        final long customer = getCacheByName("DCUSTOMERS")
           .entrySet()
           .parallelStream()
+          .map(entry -> {
+              log.info("{}:{}", entry.getKey(), entry.getValue());
+              return entry;
+          })
           .collect(CacheCollectors.serializableCollector(Collectors::counting));
 
 
