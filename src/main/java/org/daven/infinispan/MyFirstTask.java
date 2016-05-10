@@ -1,12 +1,15 @@
 package org.daven.infinispan;
 
 import org.infinispan.Cache;
-import org.infinispan.commons.marshall.Marshaller;
+import org.infinispan.stream.CacheCollectors;
 import org.infinispan.tasks.ServerTask;
 import org.infinispan.tasks.TaskContext;
 import org.infinispan.tasks.TaskExecutionMode;
 
+import java.util.stream.Collectors;
 
+//at least in JDG7.0.0 beta the cache should have
+// the compability flag.
 @SuppressWarnings("unchecked")
 public class MyFirstTask implements ServerTask<String> {
 
@@ -14,17 +17,13 @@ public class MyFirstTask implements ServerTask<String> {
 
     public String call() throws Exception {
 
-        final Marshaller marshaller = taskContext.getMarshaller().get();
-
-        getCacheByName("CUSTOMER")
+        final Long customer = getCacheByName("CUSTOMER")
           .entrySet()
-          .stream()
-          .forEach(entry -> {
-              System.out.println(entry.getKey());
-              System.out.println(entry.getValue());
-          });
+          .parallelStream()
+          .collect(CacheCollectors.serializableCollector(Collectors::counting));
 
-        return "Success";
+
+        return "Success - " + customer;
     }
 
     private Cache<String, String> getCacheByName(String cacheName) {
