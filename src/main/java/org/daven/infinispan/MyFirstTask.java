@@ -6,9 +6,7 @@ import org.infinispan.stream.CacheCollectors;
 import org.infinispan.tasks.ServerTask;
 import org.infinispan.tasks.TaskContext;
 import org.infinispan.tasks.TaskExecutionMode;
-import org.infinispan.util.function.SerializableBiConsumer;
 
-import java.io.Serializable;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -23,21 +21,25 @@ public class MyFirstTask implements ServerTask<String> {
 
     public String call() throws Exception {
 
-        final Cache<String, String> daddress1 = getCacheByName("DADDRESS");
+        getCacheByName("DADDRESS")
+          .putAll(
+            getCacheByName("DCUSTOMERS")
+              .entrySet()
+              .stream()
+              .map(entry -> {
+                  log.info("{}:{}", entry.getKey(), entry.getValue());
+                  entry.setValue(entry.getValue() + "modified");
+                  return entry;
+              })
+              .collect(
+                CacheCollectors.serializableCollector(
+                  () ->
+                    Collectors.toMap(Map.Entry::getKey,
+                                     Map.Entry::getValue))
+              )
+          );
 
-        getCacheByName("DCUSTOMERS")
-        .entrySet()
-          .stream()
-          .map(entry -> {
-              log.info("{}:{}", entry.getKey(), entry.getValue());
-              entry.setValue(entry.getValue()+"modified");
-              return entry;
-          })
-          .forEach((SerializableBiConsumer<Cache<Object, Object>, Map.Entry<String, String>>) (myCache, entry) -> {
-              myCache.put(entry.getKey(), entry.getValue());
-          });
-
-        final Long number = getCacheByName("DCUSTOMERS")
+        final Long number = getCacheByName("DADDRESS")
           .entrySet()
           .stream()
           .map(entry -> {
@@ -46,9 +48,14 @@ public class MyFirstTask implements ServerTask<String> {
           })
           .collect(CacheCollectors.serializableCollector(Collectors::counting));
 
-        taskContext.getCache().get().getAdvancedCache().getCacheManager().executor().submit(() -> {
-            log.info("different process");
-        });
+        taskContext.getCache()
+          .get()
+          .getAdvancedCache()
+          .getCacheManager()
+          .executor()
+          .submit(() -> {
+              log.info("different process");
+          });
 
         return "Success - " + number;
     }
@@ -73,7 +80,4 @@ public class MyFirstTask implements ServerTask<String> {
         return TaskExecutionMode.ONE_NODE;
     }
 
-    public interface SerialCache<K, V> extends Cache<K, V>, Serializable {
-
-    }
 }

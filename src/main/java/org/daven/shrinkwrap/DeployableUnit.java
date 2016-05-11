@@ -24,6 +24,7 @@ public class DeployableUnit {
                 .create(JavaArchive.class)
                 .addClasses(serviceClasses)
                 .addAsServiceProvider(ServerTask.class, serviceClasses[0]);
+
         return this;
     }
 
