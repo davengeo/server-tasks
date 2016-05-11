@@ -13,7 +13,6 @@ public class DeployableTest {
     public void should_create_deployable() {
         deployableUnit
           .createJar(MyFirstTask.class,
-                     MyConsumer.class,
                      TechnicalException.class)
           .deploy("map-reduce.jar", deploymentPath);
     }

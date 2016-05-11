@@ -7,7 +7,6 @@ import org.infinispan.tasks.ServerTask;
 import org.infinispan.tasks.TaskContext;
 import org.infinispan.tasks.TaskExecutionMode;
 
-import java.util.Map;
 import java.util.stream.Collectors;
 
 //at least in JDG7.0.0 beta the cache should have
@@ -16,68 +15,61 @@ import java.util.stream.Collectors;
 @Slf4j
 public class MyFirstTask implements ServerTask<String> {
 
-    private TaskContext taskContext;
+  private TaskContext taskContext;
 
 
-    public String call() throws Exception {
+  public String call() throws Exception {
 
-        getCacheByName("DADDRESS")
-          .putAll(
-            getCacheByName("DCUSTOMERS")
-              .entrySet()
-              .stream()
-              .map(entry -> {
-                  log.info("{}:{}", entry.getKey(), entry.getValue());
-                  entry.setValue(entry.getValue() + "modified");
-                  return entry;
-              })
-              .collect(
-                CacheCollectors.serializableCollector(
-                  () ->
-                    Collectors.toMap(Map.Entry::getKey,
-                                     Map.Entry::getValue))
-              )
-          );
-
-        final Long number = getCacheByName("DADDRESS")
-          .entrySet()
-          .stream()
-          .map(entry -> {
-              log.info("{}:{}", entry.getKey(), entry.getValue());
-              return entry;
-          })
-          .collect(CacheCollectors.serializableCollector(Collectors::counting));
-
-        taskContext.getCache()
-          .get()
-          .getAdvancedCache()
+    getCacheByName("DCUSTOMERS")
+      .entrySet()
+      .stream()
+      .map(
+        entry -> {
+          log.info("dcustomers: {}:{}", entry.getKey(), entry.getValue());
+          entry.setValue(entry.getValue() + "modified");
+          return entry;
+        })
+      .forEach((cache, entry) -> {
+        cache
           .getCacheManager()
-          .executor()
-          .submit(() -> {
-              log.info("different process");
-          });
+          .getCache("DADDRESS")
+          .put(entry.getKey(),
+               entry.getValue());
+      });
 
-        return "Success - " + number;
-    }
+    final Long number = getCacheByName("DADDRESS")
+      .entrySet()
+      .stream()
+      .map(entry -> {
+        log.info("daddress {}:{}", entry.getKey(), entry.getValue());
+        return entry;
+      })
+      .collect(CacheCollectors.serializableCollector(Collectors::counting));
 
-    private String getValue(String key) {
-        return getCacheByName("DADDRESS").get(key);
-    }
+    taskContext.getCache()
+      .get()
+      .getAdvancedCache()
+      .getCacheManager()
+      .executor()
+      .submit(() -> log.info("different process"));
 
-    private Cache<String, String> getCacheByName(String cacheName) {
-        return taskContext.getCache().get().getCacheManager().getCache(cacheName, true);
-    }
+    return "Success - " + number;
+  }
 
-    public void setTaskContext(TaskContext taskContext) {
-        this.taskContext = taskContext;
-    }
+  private Cache<String, String> getCacheByName(String cacheName) {
+    return taskContext.getCache().get().getCacheManager().getCache(cacheName, true);
+  }
 
-    public String getName() {
-        return "MyFirstTask";
-    }
+  public void setTaskContext(TaskContext taskContext) {
+    this.taskContext = taskContext;
+  }
 
-    public TaskExecutionMode getExecutionMode() {
-        return TaskExecutionMode.ONE_NODE;
-    }
+  public String getName() {
+    return "MyFirstTask";
+  }
+
+  public TaskExecutionMode getExecutionMode() {
+    return TaskExecutionMode.ALL_NODES;
+  }
 
 }
