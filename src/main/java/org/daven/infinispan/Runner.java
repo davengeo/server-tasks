@@ -31,7 +31,7 @@ public class Runner implements CommandLineRunner {
         RemoteCacheManager cacheManager = new RemoteCacheManager(builder.build());
         // Obtain the remote cache
         RemoteCache<String, String> cache = cacheManager.getCache(cacheName);
-        RemoteCache<String, String> cache2 = cacheManager.getCache(cacheSecondary);
+        RemoteCache<String, String> cache2 = cacheManager.getCache("DADDRESS");
         fixtureCache(cache);
         cache2.clear();
         // Run the script on the server, passing in the parameters
