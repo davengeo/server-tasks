@@ -51,8 +51,4 @@ public class Runner implements CommandLineRunner {
         log.info(cache.get("1"));
         log.info(cache.get("2"));
     }
-
-    public void setCacheName(String cacheName) {
-        this.cacheName = cacheName;
-    }
 }

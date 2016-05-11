@@ -69,7 +69,7 @@ public class MyFirstTask implements ServerTask<String> {
   }
 
   public TaskExecutionMode getExecutionMode() {
-    return TaskExecutionMode.ALL_NODES;
+    return TaskExecutionMode.ONE_NODE;
   }
 
 }
