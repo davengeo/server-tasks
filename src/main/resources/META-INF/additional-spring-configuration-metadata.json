@@ -1,0 +1,19 @@
+{
+  "properties": [
+    {
+      "name": "deployment.path",
+      "type": "java.lang.String",
+      "description": "Description for deployment.path."
+    },
+    {
+      "name": "cache.name",
+      "type": "java.lang.String",
+      "description": "Description for cache.name."
+    },
+    {
+      "name": "cache.secondary",
+      "type": "java.lang.String",
+      "description": "Description for cache.secondary."
+    }
+  ]
+}

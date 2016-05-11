@@ -6,7 +6,10 @@ import org.infinispan.stream.CacheCollectors;
 import org.infinispan.tasks.ServerTask;
 import org.infinispan.tasks.TaskContext;
 import org.infinispan.tasks.TaskExecutionMode;
+import org.infinispan.util.function.SerializableBiConsumer;
 
+import java.io.Serializable;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 //at least in JDG7.0.0 beta the cache should have
@@ -17,19 +20,41 @@ public class MyFirstTask implements ServerTask<String> {
 
     private TaskContext taskContext;
 
+
     public String call() throws Exception {
 
-        final long customer = getCacheByName("DCUSTOMERS")
+        final Cache<String, String> daddress1 = getCacheByName("DADDRESS");
+
+        getCacheByName("DCUSTOMERS")
+        .entrySet()
+          .stream()
+          .map(entry -> {
+              log.info("{}:{}", entry.getKey(), entry.getValue());
+              entry.setValue(entry.getValue()+"modified");
+              return entry;
+          })
+          .forEach((SerializableBiConsumer<Cache<Object, Object>, Map.Entry<String, String>>) (myCache, entry) -> {
+              myCache.put(entry.getKey(), entry.getValue());
+          });
+
+        final Long number = getCacheByName("DCUSTOMERS")
           .entrySet()
-          .parallelStream()
+          .stream()
           .map(entry -> {
               log.info("{}:{}", entry.getKey(), entry.getValue());
               return entry;
           })
           .collect(CacheCollectors.serializableCollector(Collectors::counting));
 
+        taskContext.getCache().get().getAdvancedCache().getCacheManager().executor().submit(() -> {
+            log.info("different process");
+        });
 
-        return "Success - " + customer;
+        return "Success - " + number;
+    }
+
+    private String getValue(String key) {
+        return getCacheByName("DADDRESS").get(key);
     }
 
     private Cache<String, String> getCacheByName(String cacheName) {
@@ -46,5 +71,9 @@ public class MyFirstTask implements ServerTask<String> {
 
     public TaskExecutionMode getExecutionMode() {
         return TaskExecutionMode.ONE_NODE;
+    }
+
+    public interface SerialCache<K, V> extends Cache<K, V>, Serializable {
+
     }
 }

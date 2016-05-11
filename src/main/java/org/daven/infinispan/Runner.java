@@ -19,6 +19,9 @@ public class Runner implements CommandLineRunner {
 
     @Value("${cache.name}")
     private String cacheName;
+    @Value("${cache.secondary}")
+    private String cacheSecondary;
+
 
     public void run(String... strings) throws Exception {
         ConfigurationBuilder builder = new ConfigurationBuilder();
@@ -28,7 +31,18 @@ public class Runner implements CommandLineRunner {
         RemoteCacheManager cacheManager = new RemoteCacheManager(builder.build());
         // Obtain the remote cache
         RemoteCache<String, String> cache = cacheManager.getCache(cacheName);
+        RemoteCache<String, String> cache2 = cacheManager.getCache(cacheName);
+        fixtureCache(cache);
+        fixtureCache(cache2);
+        // Run the script on the server, passing in the parameters
+        Object result = cache.execute("MyFirstTask", Collections.emptyMap());
+        // Print the result
+        log.info("Result = {}\n", result);
+        // Stop the cache manager and release resources
+        cacheManager.stop();
+    }
 
+    private void fixtureCache(RemoteCache<String, String> cache) {
         cache.clear();
         // Introduce some values
         cache.put("1", "one");
@@ -36,12 +50,6 @@ public class Runner implements CommandLineRunner {
         //
         log.info(cache.get("1"));
         log.info(cache.get("2"));
-        // Run the script on the server, passing in the parameters
-        Object result = cache.execute("MyFirstTask", Collections.emptyMap());
-        // Print the result
-        log.info("Result = {}\n", result);
-        // Stop the cache manager and release resources
-        cacheManager.stop();
     }
 
     public void setCacheName(String cacheName) {
