@@ -22,23 +22,20 @@ public class Runner implements CommandLineRunner {
     @Value("${cache.secondary}")
     private String cacheSecondary;
 
-
     public void run(String... strings) throws Exception {
         ConfigurationBuilder builder = new ConfigurationBuilder();
         builder.marshaller(new JBossMarshaller());
         builder.addServer().host("127.0.0.1").port(DEFAULT_HOTROD_PORT);
         // Connect to the server
         RemoteCacheManager cacheManager = new RemoteCacheManager(builder.build());
-        // Obtain the remote cache
         RemoteCache<String, String> cache = cacheManager.getCache(cacheName);
-        RemoteCache<String, String> cache2 = cacheManager.getCache("DADDRESS");
+        RemoteCache<String, String> cache2 = cacheManager.getCache(cacheSecondary);
+        // fixture
         fixtureCache(cache);
         cache2.clear();
         // Run the script on the server, passing in the parameters
         Object result = cache.execute("MyFirstTask", Collections.emptyMap());
-        // Print the result
-        log.info("Result = {}\n", result);
-        // Stop the cache manager and release resources
+        log.info("Result = {}", result);
         cacheManager.stop();
     }
 
