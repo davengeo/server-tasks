@@ -16,31 +16,33 @@ import java.util.stream.Collectors;
 @Slf4j
 public class MyFirstTask implements ServerTask<String> {
 
+  private static final String DCUSTOMERS = "DCUSTOMERS";
+  private static final String DADDRESS = "DADDRESS";
   private TaskContext taskContext;
 
 
   public String call() throws Exception {
 
-    getCacheByName("DCUSTOMERS")
+    getCacheByName(DCUSTOMERS)
       .entrySet()
       .stream()
       .map(
         entry -> {
-          log.info("dcustomers: {}:{}", entry.getKey(), entry.getValue());
+          log.info("{}:{}:{}", DCUSTOMERS, entry.getKey(), entry.getValue());
           entry.setValue(entry.getValue() + "modified");
           return entry;
         })
       .forEach((cache, entry) -> {
-        getOtherCache(cache, "DADDRESS")
+        getOtherCache(cache, DADDRESS)
           .put(entry.getKey(),
                entry.getValue());
       });
 
-    final Long number = getCacheByName("DADDRESS")
+    final Long number = getCacheByName(DADDRESS)
       .entrySet()
       .stream()
       .map(entry -> {
-        log.info("cacheName {}:{}", entry.getKey(), entry.getValue());
+        log.info("{}:{}:{}", DADDRESS, entry.getKey(), entry.getValue());
         return entry;
       })
       .collect(CacheCollectors.serializableCollector(Collectors::counting));
@@ -74,7 +76,7 @@ public class MyFirstTask implements ServerTask<String> {
   }
 
   public String getName() {
-    return "MyFirstTask";
+    return this.getClass().getSimpleName();
   }
 
   public TaskExecutionMode getExecutionMode() {
