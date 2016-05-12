@@ -6,6 +6,11 @@ package org.daven.infinispan;
 
 
 public class TechnicalException extends RuntimeException {
+
+  public TechnicalException() {
+    super("TechnicalException has occurred");
+  }
+
   public TechnicalException(Throwable t) {
     super(t);
   }

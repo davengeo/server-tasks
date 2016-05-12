@@ -68,7 +68,8 @@ public class MyFirstTask implements ServerTask<String> {
       .getCache()
       .orElseThrow(() -> new TechnicalException(
         String.format("Cache %snot found", cacheName)))
-      .getCacheManager().getCache(cacheName, true);
+      .getCacheManager()
+      .getCache(cacheName, false);
   }
 
   public void setTaskContext(TaskContext taskContext) {
