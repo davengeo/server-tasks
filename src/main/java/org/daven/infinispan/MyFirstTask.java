@@ -9,8 +9,9 @@ import org.infinispan.tasks.TaskExecutionMode;
 
 import java.util.stream.Collectors;
 
-//at least in JDG7.0.0 beta the cache should have
-// the compability flag.
+//at least in JDG7.0.0 beta the caches to use here
+// should have the compatibility flag in order to debug.
+//
 @SuppressWarnings("unchecked")
 @Slf4j
 public class MyFirstTask implements ServerTask<String> {
@@ -30,9 +31,7 @@ public class MyFirstTask implements ServerTask<String> {
           return entry;
         })
       .forEach((cache, entry) -> {
-        cache
-          .getCacheManager()
-          .getCache("DADDRESS")
+        getOtherCache(cache, "DADDRESS")
           .put(entry.getKey(),
                entry.getValue());
       });
@@ -41,7 +40,7 @@ public class MyFirstTask implements ServerTask<String> {
       .entrySet()
       .stream()
       .map(entry -> {
-        log.info("daddress {}:{}", entry.getKey(), entry.getValue());
+        log.info("cacheName {}:{}", entry.getKey(), entry.getValue());
         return entry;
       })
       .collect(CacheCollectors.serializableCollector(Collectors::counting));
@@ -56,8 +55,18 @@ public class MyFirstTask implements ServerTask<String> {
     return "Success - " + number;
   }
 
+  private Cache<Object, Object> getOtherCache(Cache<Object, Object> cache, String cacheName) {
+    return cache
+      .getCacheManager()
+      .getCache(cacheName);
+  }
+
   private Cache<String, String> getCacheByName(String cacheName) {
-    return taskContext.getCache().get().getCacheManager().getCache(cacheName, true);
+    return taskContext
+      .getCache()
+      .orElseThrow(() -> new TechnicalException(
+        String.format("Cache %snot found", cacheName)))
+      .getCacheManager().getCache(cacheName, true);
   }
 
   public void setTaskContext(TaskContext taskContext) {

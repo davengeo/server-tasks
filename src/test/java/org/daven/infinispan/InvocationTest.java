@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2016 Proximus.
- * me@davengeo.com
- */
 package org.daven.infinispan;
 
 import org.junit.Test;
