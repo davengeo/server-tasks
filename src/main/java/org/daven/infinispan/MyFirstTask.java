@@ -49,7 +49,6 @@ public class MyFirstTask implements ServerTask<String> {
 
     taskContext.getCache()
       .get()
-      .getAdvancedCache()
       .getCacheManager()
       .executor()
       .submit(() -> log.info("different process"));
