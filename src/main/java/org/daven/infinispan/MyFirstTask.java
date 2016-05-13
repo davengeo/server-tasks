@@ -8,6 +8,7 @@ import org.infinispan.tasks.ServerTask;
 import org.infinispan.tasks.TaskContext;
 import org.infinispan.tasks.TaskExecutionMode;
 
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 //
@@ -22,9 +23,12 @@ public class MyFirstTask implements ServerTask<String> {
   private static final String DADDRESS = "DADDRESS";
   private TaskContext taskContext;
 
+  Function<String, Cache<String, String>> getCache = s ->
+    taskContext.getCache().get().getCacheManager().getCache(s, false);
+
   public String call() throws Exception {
 
-    getCacheByName(DCUSTOMERS)
+    getCache.apply(DCUSTOMERS)
       .entrySet()
       .parallelStream()
       .map(
@@ -39,12 +43,11 @@ public class MyFirstTask implements ServerTask<String> {
                entry.getValue());
       });
 
-    final Long number = getCacheByName(DADDRESS)
+    final Long number = getCache.apply(DADDRESS)
       .entrySet()
       .parallelStream()
       .peek(entry ->
-              log.info("{}:{}:{}", DADDRESS, entry.getKey(), entry.getValue())
-      )
+              log.info("{}:{}:{}", DADDRESS, entry.getKey(), entry.getValue()))
       .collect(CacheCollectors.serializableCollector(Collectors::counting));
 
     taskContext.getCache()
@@ -54,15 +57,6 @@ public class MyFirstTask implements ServerTask<String> {
       .submit(() -> log.info("different process"));
 
     return "Success - " + number;
-  }
-
-  private Cache<String, String> getCacheByName(String cacheName) {
-    return taskContext
-      .getCache()
-      .orElseThrow(() -> new TechnicalException(
-        String.format("Cache %snot found", cacheName)))
-      .getCacheManager()
-      .getCache(cacheName, false);
   }
 
   public void setTaskContext(TaskContext taskContext) {
