@@ -36,6 +36,8 @@ public class Runner implements CommandLineRunner {
         // Run the script on the server, passing in the parameters
         Object result = cache.execute("MyFirstTask", Collections.emptyMap());
         log.info("Result = {}", result);
+        log.info(cache2.get("1"));
+        log.info(cache2.get("2"));
         cacheManager.stop();
     }
 

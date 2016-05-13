@@ -2,6 +2,7 @@ package org.daven.infinispan;
 
 import lombok.extern.slf4j.Slf4j;
 import org.infinispan.Cache;
+import org.infinispan.commons.util.SimpleImmutableEntry;
 import org.infinispan.stream.CacheCollectors;
 import org.infinispan.tasks.ServerTask;
 import org.infinispan.tasks.TaskContext;
@@ -25,22 +26,21 @@ public class MyFirstTask implements ServerTask<String> {
 
     getCacheByName(DCUSTOMERS)
       .entrySet()
-      .stream()
+      .parallelStream()
       .map(
-        entry -> {
-          log.info("{}:{}:{}", DCUSTOMERS, entry.getKey(), entry.getValue());
-          entry.setValue(entry.getValue() + "modified");
-          return entry;
-        })
+        entry -> new SimpleImmutableEntry(entry.getKey(),
+                                          String.format("%s-modified", entry.getValue())))
       .forEach((cache, entry) -> {
-        getOtherCache(cache, DADDRESS)
+        cache
+          .getCacheManager()
+          .getCache(DADDRESS)
           .put(entry.getKey(),
                entry.getValue());
       });
 
     final Long number = getCacheByName(DADDRESS)
       .entrySet()
-      .stream()
+      .parallelStream()
       .map(entry -> {
         log.info("{}:{}:{}", DADDRESS, entry.getKey(), entry.getValue());
         return entry;
@@ -55,12 +55,6 @@ public class MyFirstTask implements ServerTask<String> {
       .submit(() -> log.info("different process"));
 
     return "Success - " + number;
-  }
-
-  private Cache<Object, Object> getOtherCache(Cache<Object, Object> cache, String cacheName) {
-    return cache
-      .getCacheManager()
-      .getCache(cacheName);
   }
 
   private Cache<String, String> getCacheByName(String cacheName) {
@@ -81,7 +75,7 @@ public class MyFirstTask implements ServerTask<String> {
   }
 
   public TaskExecutionMode getExecutionMode() {
-    return TaskExecutionMode.ONE_NODE;
+    return TaskExecutionMode.ALL_NODES;
   }
 
 }
