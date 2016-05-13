@@ -10,8 +10,9 @@ import org.infinispan.tasks.TaskExecutionMode;
 
 import java.util.stream.Collectors;
 
-//at least in JDG7.0.0 beta the caches to use here
-// should have the compatibility flag in order to debug.
+//
+// At least in JDG7.0.0 beta the caches to use here
+// should have the compatibility flag to log the value correctly.
 //
 @SuppressWarnings("unchecked")
 @Slf4j
@@ -21,15 +22,15 @@ public class MyFirstTask implements ServerTask<String> {
   private static final String DADDRESS = "DADDRESS";
   private TaskContext taskContext;
 
-
   public String call() throws Exception {
 
     getCacheByName(DCUSTOMERS)
       .entrySet()
       .parallelStream()
       .map(
-        entry -> new SimpleImmutableEntry(entry.getKey(),
-                                          String.format("%s-modified", entry.getValue())))
+        entry ->
+          new SimpleImmutableEntry(entry.getKey(),
+                                   String.format("%s-modified", entry.getValue())))
       .forEach((cache, entry) -> {
         cache
           .getCacheManager()
@@ -41,10 +42,9 @@ public class MyFirstTask implements ServerTask<String> {
     final Long number = getCacheByName(DADDRESS)
       .entrySet()
       .parallelStream()
-      .map(entry -> {
-        log.info("{}:{}:{}", DADDRESS, entry.getKey(), entry.getValue());
-        return entry;
-      })
+      .peek(entry ->
+              log.info("{}:{}:{}", DADDRESS, entry.getKey(), entry.getValue())
+      )
       .collect(CacheCollectors.serializableCollector(Collectors::counting));
 
     taskContext.getCache()
