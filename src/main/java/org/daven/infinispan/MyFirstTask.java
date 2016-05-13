@@ -23,10 +23,15 @@ public class MyFirstTask implements ServerTask<String> {
   private static final String DADDRESS = "DADDRESS";
   private TaskContext taskContext;
 
-  Function<String, Cache<String, String>> getCache = s ->
-    taskContext.getCache().get().getCacheManager().getCache(s, false);
 
   public String call() throws Exception {
+
+    Function<String, Cache<String, String>> getCache = s ->
+      taskContext
+        .getCache()
+        .get()
+        .getCacheManager()
+        .getCache(s, false);
 
     getCache.apply(DCUSTOMERS)
       .entrySet()
