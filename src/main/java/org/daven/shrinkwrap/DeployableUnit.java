@@ -9,7 +9,7 @@ import java.io.File;
 
 public class DeployableUnit {
 
-    JavaArchive javaArchive;
+    private JavaArchive javaArchive;
 
     protected DeployableUnit() {
     }

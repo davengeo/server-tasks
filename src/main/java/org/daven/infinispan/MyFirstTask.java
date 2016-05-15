@@ -29,7 +29,7 @@ public class MyFirstTask implements ServerTask<String> {
     Function<String, Cache<String, String>> getCache = s ->
       taskContext
         .getCache()
-        .get()
+        .orElseThrow(TechnicalException::new)
         .getCacheManager()
         .getCache(s, false);
 
@@ -56,7 +56,7 @@ public class MyFirstTask implements ServerTask<String> {
       .collect(CacheCollectors.serializableCollector(Collectors::counting));
 
     taskContext.getCache()
-      .get()
+      .orElseThrow(TechnicalException::new)
       .getCacheManager()
       .executor()
       .submit(() -> log.info("different process"));
